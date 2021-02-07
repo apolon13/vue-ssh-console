@@ -98,7 +98,7 @@ class SshMessageComponent implements MessageComponentInterface
             $this->stream->on($event, function ($chunk = null) use ($connection, $event) {
                 if ($chunk !== null) {
                     $matches = [];
-                    preg_match("/[A-Za-z0-9-_]*@[A-Za-z0-9-_]*:[\/A-Za-z~_-]*[\s][~A-Za-z\/_-]/", $chunk, $matches);
+                    preg_match("/[A-Za-z0-9-_]*@[A-Za-z0-9-_]*:[\/A-Za-z~_-]*[\s][~A-Za-z\/_-]*/", $chunk, $matches);
                     $connectionInfo = $matches[0] ?? null;
                     if ($connectionInfo !== null && ($pos = strrpos($chunk, "]0;$connectionInfo")) !== false) {
                         $chunk = trim(substr($chunk, 0, $pos));
