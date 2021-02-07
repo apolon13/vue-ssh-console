@@ -7,6 +7,8 @@ use App\Ssh\SshMessageComponent;
 use Ratchet\Http\HttpServer;
 use Ratchet\Server\IoServer;
 use Ratchet\WebSocket\WsServer;
+use SensioLabs\AnsiConverter\AnsiToHtmlConverter;
+use SensioLabs\AnsiConverter\Theme\SolarizedTheme;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -30,7 +32,7 @@ class SshServerCommand extends Command
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $messageComponent = new SshMessageComponent();
+        $messageComponent = new SshMessageComponent(new AnsiToHtmlConverter(new SolarizedTheme()));
         $wsServer = new WsServer($messageComponent);
         $server = IoServer::factory(
             new HttpServer(

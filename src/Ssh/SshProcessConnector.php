@@ -60,7 +60,7 @@ class SshProcessConnector implements ConnectorInterface
         if ($pass !== null) {
             $this->cmd .= 'sshpass -p ' . \escapeshellarg($pass) . ' ';
         }
-        $this->cmd .= 'ssh -vv ';
+        $this->cmd .= 'ssh -vv -tt ';
 
         // disable interactive password prompt if no password was given (see sshpass above)
         if ($pass === null) {

@@ -9,6 +9,8 @@ use Ratchet\RFC6455\Messaging\MessageInterface;
 use Ratchet\WebSocket\MessageComponentInterface;
 use React\EventLoop\LoopInterface;
 use React\Socket\ConnectionInterface as ReactConnectionInterface;
+use SensioLabs\AnsiConverter\AnsiToHtmlConverter;
+use SensioLabs\AnsiConverter\Theme\SolarizedTheme;
 
 /**
  * Class SshMessageComponent
@@ -26,6 +28,20 @@ class SshMessageComponent implements MessageComponentInterface
      * @var LoopInterface
      */
     private $loop;
+
+    /**
+     * @var AnsiToHtmlConverter
+     */
+    private $ansiConverter;
+
+    /**
+     * SshMessageComponent constructor.
+     * @param AnsiToHtmlConverter $ansiConverter
+     */
+    public function __construct(AnsiToHtmlConverter $ansiConverter)
+    {
+        $this->ansiConverter = $ansiConverter;
+    }
 
     /**
      * @param LoopInterface $loop
@@ -61,9 +77,6 @@ class SshMessageComponent implements MessageComponentInterface
                     'data' => []
                 ]));
                 $this->registerEventHandlers($connection);
-                $this->loop->addTimer(0.1, function () {
-                    $this->stream->write('echo "current pwd $PWD"' . PHP_EOL);
-                });
             },
             function ($error) use ($connection) {
                 $error->send(json_encode([
@@ -84,27 +97,20 @@ class SshMessageComponent implements MessageComponentInterface
         foreach (['data', 'error', 'draw', 'end'] as $event) {
             $this->stream->on($event, function ($chunk = null) use ($connection, $event) {
                 if ($chunk !== null) {
-                    $isPWd = false;
-                    if (mb_strrpos($chunk, 'current pwd') === 0) {
-                        $isPWd = true;
+                    $matches = [];
+                    preg_match("/[A-Za-z0-9-_]*@[A-Za-z0-9-_]*:[\/A-Za-z~_-]*[\s][~A-Za-z\/_-]/", $chunk, $matches);
+                    $connectionInfo = $matches[0] ?? null;
+                    if ($connectionInfo !== null && ($pos = strrpos($chunk, "]0;$connectionInfo")) !== false) {
+                        $chunk = trim(substr($chunk, 0, $pos));
                     }
-                    if ($isPWd === true) {
-                        $connection->send(json_encode([
-                            'handler' => 'loadPwd',
-                            'event' => $event,
-                            'data' => [
-                                'pwd' => str_replace('current pwd', false, $chunk)
-                            ]
-                        ]));
-                    } else {
-                        $connection->send(json_encode([
-                            'handler' => 'loadBuffer',
-                            'event' => $event,
-                            'data' => [
-                                'buffer' => $chunk
-                            ]
-                        ]));
-                    }
+                    $connection->send(json_encode([
+                        'handler' => 'loadBuffer',
+                        'event' => $event,
+                        'data' => [
+                            'buffer' => $this->ansiConverter->convert($chunk),
+                            'connectionInfo' => $connectionInfo
+                        ]
+                    ]));
                 }
             });
         }
@@ -117,9 +123,6 @@ class SshMessageComponent implements MessageComponentInterface
     private function write(RatchetConnectionInterface $connection, $params)
     {
         $this->stream->write($params['command'] . PHP_EOL);
-        $this->loop->addTimer(0.1, function () {
-            $this->stream->write('echo "current pwd $PWD"' . PHP_EOL);
-        });
     }
 
     /**

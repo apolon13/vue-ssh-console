@@ -5,10 +5,12 @@
         <hsc-menu-style-white>
           <hsc-menu-bar>
             <hsc-menu-bar-item label="Options">
-              <hsc-menu-item label="Connect" :sync="true" @click="settingsIsOpened = !settingsIsOpened" />
+              <hsc-menu-item label="Connect" :sync="true"
+                             @click="settingsIsOpened = !settingsIsOpened"/>
             </hsc-menu-bar-item>
             <hsc-menu-bar-item label="Buffer">
-              <hsc-menu-item label="Clear" :sync="true" @click="commands = [{command: null, buffer: []}]" />
+              <hsc-menu-item label="Clear" :sync="true"
+                             @click="commands = [{command: null, buffer: []}]"/>
             </hsc-menu-bar-item>
           </hsc-menu-bar>
         </hsc-menu-style-white>
@@ -17,21 +19,19 @@
         <div class="Terminal__Prompt" v-for="(command, index) in commands"
              :key="index">
           <template v-if="index < commands.length && command.command !== null">
-             <span class="pre-command">{{ command.connectionInfo }}:
-              <span style="color: #6060ff;">{{ command.pwd }}</span>
-              <span style="color: white">$</span>
-            </span>
+             <span class="pre-command" v-html="command.connectionInfo">:</span>
+              <span style="color: white"> $</span>
             <input class="Prompt__cursor" disabled :value="command.command">
           </template>
           <pre class="buffer"
-               v-if="command.buffer.length > 0">{{ bufferToString(command.buffer) }}</pre>
+               v-if="command.buffer.length > 0" v-html="bufferToString(command.buffer)"></pre>
           <div class="clearfix"></div>
           <template v-if="(index + 1) === commands.length">
-            <span class="pre-command">{{ connectionInfo }}:
-              <span style="color: #6060ff;">{{ pwd }}</span>
-              <span style="color: white">$</span>
-            </span>
-            <input class="Prompt__cursor" v-focus @keypress.enter="sendToShell"
+            <span class="pre-command" v-html="connectionInfo">:</span>
+            <span style="color: white"> $</span>
+            <input class="Prompt__cursor" v-focus
+                   @keydown="commandByHistory"
+                   @keypress.enter="sendToShell"
                    v-model="currentCommand">
           </template>
         </div>
@@ -44,7 +44,8 @@
         <input placeholder="ip" class="Prompt__cursor auth-input"
                v-model="variables.ip">
         <div class="debug-mode">
-          <input type="checkbox" v-model="variables.debug"> <label for="" style="color:white;">debug</label>
+          <input type="checkbox" v-model="variables.debug"> <label for=""
+                                                                   style="color:white;">debug</label>
         </div>
         <pre v-if="authError" class="buffer">{{ authError }}</pre>
         <button class="connect-btn" @click="connect">Connect</button>
@@ -57,6 +58,7 @@
 <script>
 import Vue from 'vue';
 import * as VueMenu from '@hscmap/vue-menu'
+
 Vue.use(VueMenu)
 
 Vue.directive('focus', {
@@ -69,8 +71,7 @@ export default {
   data() {
     return {
       currentCommand: null,
-      connectionInfo: window.localStorage.getItem('username') + '@' + window.localStorage.getItem('ip'),
-      pwd: '~',
+      connectionInfo: null,
       variables: {
         username: window.localStorage.getItem('username'),
         pass: window.localStorage.getItem('pass'),
@@ -80,6 +81,7 @@ export default {
       auth: false,
       authError: null,
       settingsIsOpened: false,
+      positionInHistory: 0,
       commands: [
         {buffer: [], command: null}
       ],
@@ -126,8 +128,35 @@ export default {
     term.scrollTop = term.scrollHeight;
   },
   methods: {
-    loadPwd(data) {
-      this.pwd = data.pwd;
+    commandByHistory(event) {
+      let isUp = event.key === 'ArrowUp';
+      let isDown = event.key === 'ArrowDown';
+      if (isUp || isDown) {
+        let commands = this.commands.map((item) => {
+          return item.command;
+        });
+        commands = commands.filter((item) => {
+          return item !== null;
+        });
+        if (commands.length !== 0) {
+          let origin = this.positionInHistory;
+          let position = 0;
+          if (isUp) {
+            position = origin - 1;
+          } else {
+            position = origin + 1;
+          }
+          if (position && (position * -1) > commands.length) {
+            Vue.set(this, 'positionInHistory', origin)
+          } else if (position >= 0) {
+            Vue.set(this, 'currentCommand', null)
+            Vue.set(this, 'positionInHistory', 0)
+          } else {
+            Vue.set(this, 'positionInHistory', position)
+            this.currentCommand = commands.splice(this.positionInHistory, 1)[0];
+          }
+        }
+      }
     },
     authSuccess() {
       this.auth = true;
@@ -150,10 +179,12 @@ export default {
       }));
     },
     loadBuffer(data) {
-      if (typeof this.commands[this.commands.length - 1].buffer === "undefined") {
-        this.commands[this.commands.length - 1].buffer = [];
+      let key = this.commands.length - 1;
+      if (typeof this.commands[key].buffer === "undefined") {
+        this.commands[key].buffer = [];
       }
-      this.commands[this.commands.length - 1].buffer.push(data.buffer);
+      this.commands[key].buffer.push(data.buffer);
+      this.connectionInfo = data.connectionInfo ? data.connectionInfo : this.connectionInfo
     },
     sendToShell() {
       let command = this.currentCommand;
@@ -186,6 +217,7 @@ export default {
   margin: 0;
   padding: 0;
 }
+
 .menubar {
   padding: 0 !important;
 }
@@ -285,7 +317,7 @@ body {
 }
 
 .Terminal__body {
-  background: rgba(56, 4, 40, .9);
+  background: rgb(11 54 66);
   height: calc(100% - 25px);
   margin-top: 37px;
   font-family: 'Ubuntu mono';
@@ -297,15 +329,18 @@ body {
 ::-webkit-scrollbar {
   width: 20px;
 }
+
 ::-webkit-scrollbar-track {
   background-color: transparent;
 }
+
 ::-webkit-scrollbar-thumb {
   background-color: #d6dee1;
   border-radius: 20px;
   border: 6px solid transparent;
   background-clip: content-box;
 }
+
 ::-webkit-scrollbar-thumb:hover {
   background-color: #a8bbbf;
 }
