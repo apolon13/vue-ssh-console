@@ -104,7 +104,7 @@ export default {
       window.localStorage.setItem('ip', this.ip)
     },
     debug() {
-      window.localStorage.setItem('debug', this.ip)
+      window.localStorage.setItem('debug', +this.debug)
     }
   },
   computed: {
@@ -273,6 +273,7 @@ body {
   padding: 0;
   box-sizing: border-box;
   align-items: center;
+  position: fixed;
 }
 
 .Toolbar__user {
@@ -286,7 +287,7 @@ body {
 .Terminal__body {
   background: rgba(56, 4, 40, .9);
   height: calc(100% - 25px);
-  margin-top: -1px;
+  margin-top: 37px;
   font-family: 'Ubuntu mono';
   overflow-x: hidden;
   overflow-y: scroll;
