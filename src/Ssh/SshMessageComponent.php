@@ -59,6 +59,9 @@ class SshMessageComponent implements MessageComponentInterface {
                     'data' => []
                 ]));
                 $this->registerEventHandlers($connection);
+                $this->loop->addTimer(0.1, function () {
+                    $this->stream->write('echo "current pwd $PWD"' . PHP_EOL);
+                });
             },
             function ($error) use ($connection) {
                 $error->send(json_encode([

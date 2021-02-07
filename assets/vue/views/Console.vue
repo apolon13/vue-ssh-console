@@ -4,12 +4,20 @@
       <div class="Terminal__Toolbar">
         <p class="Toolbar__user">Terminal</p>
       </div>
-      <div class="Terminal__body" v-if="auth && !settingsIsOpened">
+      <div class="Terminal__body" id="term" v-if="auth && !settingsIsOpened">
         <button class="settings-btn" @click="settingsIsOpened = !settingsIsOpened">Settings</button>
+        <button class="settings-btn clear-buf-btn" @click="commands = [{command: null, buffer: []}]">Clear buffer</button>
         <div class="Terminal__Prompt" v-for="(command, index) in commands" :key="index">
-          <pre class="buffer" v-if="bufferToString(command.buffer)">{{bufferToString(command.buffer)}}</pre>
+          <template v-if="index < commands.length && command.command !== null">
+             <span class="pre-command">{{ command.connectionInfo }}:
+              <span style="color: #6060ff;">{{command.pwd}}</span>
+              <span style="color: white">$</span>
+            </span>
+            <input class="Prompt__cursor" disabled :value="command.command">
+          </template>
+          <pre class="buffer" v-if="command.buffer.length > 0">{{bufferToString(command.buffer)}}</pre>
           <div class="clearfix"></div>
-          <template v-if="index + 1 === commands.length">
+          <template v-if="(index + 1) === commands.length">
             <span class="pre-command">{{ connectionInfo }}:
               <span style="color: #6060ff;">{{pwd}}</span>
               <span style="color: white">$</span>
@@ -53,7 +61,7 @@ export default {
       authError: null,
       settingsIsOpened: false,
       commands: [
-        {buffer: []}
+        {buffer: [], command: null}
       ],
       socket: {}
     }
@@ -81,14 +89,13 @@ export default {
     pass() {return this.variables.pass},
     ip() {return this.variables.ip},
   },
+  updated() {
+    let term = document.getElementById('term');
+    term.scrollTop = term.scrollHeight;
+  },
   methods: {
     loadPwd(data) {
-      let replacedPwd = data.pwd.replace(/[^a-zA-ZА-Яа-яЁё]/gi,'').replace(/\s+/gi,', ');
-      if (replacedPwd === 'home' + this.username) {
-        this.pwd = '~';
-      } else {
-        this.pwd = data.pwd;
-      }
+      this.pwd = data.pwd;
     },
     authSuccess() {
       this.auth = true;
@@ -110,7 +117,7 @@ export default {
       }));
     },
     loadBuffer(data) {
-      this.commands.push({buffer: []});
+      this.commands[this.commands.length - 1].buffer = [];
       this.commands[this.commands.length - 1].buffer.push(data.buffer);
     },
     sendToShell() {
@@ -118,6 +125,12 @@ export default {
       for (const [key, value] of Object.entries(this.variables)) {
         command = command.replace('{$' + key + '}', value);
       }
+      this.commands.push({
+        command: this.currentCommand,
+        pwd: this.pwd,
+        connectionInfo: this.connectionInfo,
+        buffer: []
+      })
       this.socket.send(JSON.stringify({
         method: 'write',
         params: {
@@ -148,6 +161,10 @@ export default {
   color: white;
   width: 100%;
   font-family: 'Ubuntu Mono';
+}
+
+.clear-buf-btn {
+  top: 70px
 }
 
 body {
