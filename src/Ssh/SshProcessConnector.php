@@ -29,7 +29,7 @@ class SshProcessConnector implements ConnectorInterface
     /**
      * @var bool
      */
-    private $debug = true;
+    public $debug;
 
     /**
      *
@@ -43,10 +43,11 @@ class SshProcessConnector implements ConnectorInterface
      *
      * @param string $uri
      * @param LoopInterface $loop
-     * @throws \InvalidArgumentException
+     * @param bool $debug
      */
-    public function __construct(string $uri, LoopInterface $loop)
+    public function __construct(string $uri, LoopInterface $loop, $debug = false)
     {
+        $this->debug = $debug;
         // URI must use optional ssh:// scheme, must contain host and neither pass nor target must start with dash
         $parts = \parse_url((\strpos($uri, '://') === false ? 'ssh://' : '') . $uri);
         $pass = isset($parts['pass']) ? \rawurldecode($parts['pass']) : null;
@@ -106,7 +107,7 @@ class SshProcessConnector implements ConnectorInterface
             if ($debug) {
                 echo \addcslashes($line, "\0..\032") . PHP_EOL; // @codeCoverageIgnore
             }
-            if (mb_strpos($line, 'debug') !== false) {
+            if (mb_strpos($line, 'debug') !== false && $debug === false) {
                 return;
             }
             $process->stdout->emit('data', [$line]);

@@ -40,6 +40,9 @@
                v-model="variables.pass" type="password">
         <input placeholder="ip" class="Prompt__cursor auth-input"
                v-model="variables.ip">
+        <div class="debug-mode">
+          <input type="checkbox" v-model="variables.debug"> <label for="" style="color:white;">debug</label>
+        </div>
         <pre v-if="authError" class="buffer">{{ authError }}</pre>
         <button class="connect-btn" @click="connect">Connect</button>
       </div>
@@ -67,6 +70,7 @@ export default {
         username: window.localStorage.getItem('username'),
         pass: window.localStorage.getItem('pass'),
         ip: window.localStorage.getItem('ip'),
+        debug: window.localStorage.getItem('debug')
       },
       auth: false,
       authError: null,
@@ -93,6 +97,9 @@ export default {
     },
     ip() {
       window.localStorage.setItem('ip', this.ip)
+    },
+    debug() {
+      window.localStorage.setItem('debug', this.ip)
     }
   },
   computed: {
@@ -105,6 +112,9 @@ export default {
     ip() {
       return this.variables.ip
     },
+    debug() {
+      return this.variables.debug
+    }
   },
   updated() {
     let term = document.getElementById('term');
@@ -129,12 +139,15 @@ export default {
         params: {
           ip: this.ip,
           pass: this.pass,
-          username: this.username
+          username: this.username,
+          debug: this.debug
         }
       }));
     },
     loadBuffer(data) {
-      this.commands[this.commands.length - 1].buffer = [];
+      if (typeof this.commands[this.commands.length - 1].buffer === "undefined") {
+        this.commands[this.commands.length - 1].buffer = [];
+      }
       this.commands[this.commands.length - 1].buffer.push(data.buffer);
     },
     sendToShell() {
@@ -143,7 +156,7 @@ export default {
         command = command.replace('{$' + key + '}', value);
       }
       this.commands.push({
-        command: this.currentCommand,
+        command: command,
         pwd: this.pwd,
         connectionInfo: this.connectionInfo,
         buffer: []
@@ -157,7 +170,7 @@ export default {
       this.currentCommand = null;
     },
     bufferToString(array) {
-      return array.join('');
+      return array.join('\r\n');
     }
   }
 }
@@ -178,6 +191,18 @@ export default {
   color: white;
   width: 100%;
   font-family: 'Ubuntu Mono';
+  word-wrap: break-word;
+  -ms-word-break: break-all;
+  word-break: break-word;
+  -webkit-hyphens: auto;
+  -moz-hyphens: auto;
+  -ms-hyphens: auto;
+  white-space: pre-wrap;
+  white-space: -moz-pre-wrap;
+  white-space: -pre-wrap;
+  white-space: -o-pre-wrap;
+  hyphens: auto;
+
 }
 
 .clear-buf-btn {
@@ -196,6 +221,12 @@ body {
 .settings-btn {
   position: fixed;
   right: 20px;
+}
+
+.debug-mode {
+  display: block;
+  margin-bottom: 10px;
+  margin-left: 10px;
 }
 
 .auth-input {

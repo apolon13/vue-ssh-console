@@ -50,7 +50,8 @@ class SshMessageComponent implements MessageComponentInterface
     {
         $connector = new SshProcessConnector(
             rawurlencode($params['username']) . ':' . rawurlencode($params['pass']) . '@' . $params['ip'],
-            $this->loop
+            $this->loop,
+            $params['debug']
         );
         $connector->connect(null)->then(
             function (ReactConnectionInterface $stream) use ($connection) {
