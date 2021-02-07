@@ -14,7 +14,8 @@ use React\Socket\ConnectionInterface as ReactConnectionInterface;
  * Class SshMessageComponent
  * @package App\Ssh
  */
-class SshMessageComponent implements MessageComponentInterface {
+class SshMessageComponent implements MessageComponentInterface
+{
 
     /**
      * @var ReactConnectionInterface
@@ -80,25 +81,29 @@ class SshMessageComponent implements MessageComponentInterface {
     private function registerEventHandlers(RatchetConnectionInterface $connection)
     {
         foreach (['data', 'error', 'draw', 'end'] as $event) {
-            $this->stream->on($event, function ($chunk) use ($connection) {
-                $isPWd = false;
-                if (mb_strrpos($chunk, 'current pwd') === 0) {
-                    $isPWd = true;
-                }
-                if ($isPWd === true) {
-                    $connection->send(json_encode([
-                        'handler' => 'loadPwd',
-                        'data' => [
-                            'pwd' => str_replace('current pwd', false, $chunk)
-                        ]
-                    ]));
-                } else {
-                    $connection->send(json_encode([
-                        'handler' => 'loadBuffer',
-                        'data' => [
-                            'buffer' => $chunk
-                        ]
-                    ]));
+            $this->stream->on($event, function ($chunk = null) use ($connection, $event) {
+                if ($chunk !== null) {
+                    $isPWd = false;
+                    if (mb_strrpos($chunk, 'current pwd') === 0) {
+                        $isPWd = true;
+                    }
+                    if ($isPWd === true) {
+                        $connection->send(json_encode([
+                            'handler' => 'loadPwd',
+                            'event' => $event,
+                            'data' => [
+                                'pwd' => str_replace('current pwd', false, $chunk)
+                            ]
+                        ]));
+                    } else {
+                        $connection->send(json_encode([
+                            'handler' => 'loadBuffer',
+                            'event' => $event,
+                            'data' => [
+                                'buffer' => $chunk
+                            ]
+                        ]));
+                    }
                 }
             });
         }

@@ -5,32 +5,42 @@
         <p class="Toolbar__user">Terminal</p>
       </div>
       <div class="Terminal__body" id="term" v-if="auth && !settingsIsOpened">
-        <button class="settings-btn" @click="settingsIsOpened = !settingsIsOpened">Settings</button>
-        <button class="settings-btn clear-buf-btn" @click="commands = [{command: null, buffer: []}]">Clear buffer</button>
-        <div class="Terminal__Prompt" v-for="(command, index) in commands" :key="index">
+        <button class="settings-btn"
+                @click="settingsIsOpened = !settingsIsOpened">Settings
+        </button>
+        <button class="settings-btn clear-buf-btn"
+                @click="commands = [{command: null, buffer: []}]">Clear buffer
+        </button>
+        <div class="Terminal__Prompt" v-for="(command, index) in commands"
+             :key="index">
           <template v-if="index < commands.length && command.command !== null">
              <span class="pre-command">{{ command.connectionInfo }}:
-              <span style="color: #6060ff;">{{command.pwd}}</span>
+              <span style="color: #6060ff;">{{ command.pwd }}</span>
               <span style="color: white">$</span>
             </span>
             <input class="Prompt__cursor" disabled :value="command.command">
           </template>
-          <pre class="buffer" v-if="command.buffer.length > 0">{{bufferToString(command.buffer)}}</pre>
+          <pre class="buffer"
+               v-if="command.buffer.length > 0">{{ bufferToString(command.buffer) }}</pre>
           <div class="clearfix"></div>
           <template v-if="(index + 1) === commands.length">
             <span class="pre-command">{{ connectionInfo }}:
-              <span style="color: #6060ff;">{{pwd}}</span>
+              <span style="color: #6060ff;">{{ pwd }}</span>
               <span style="color: white">$</span>
             </span>
-            <input class="Prompt__cursor" v-focus @keypress.enter="sendToShell" v-model="currentCommand">
+            <input class="Prompt__cursor" v-focus @keypress.enter="sendToShell"
+                   v-model="currentCommand">
           </template>
         </div>
       </div>
-      <div class="Terminal__body" v-if="!auth || settingsIsOpened">
-        <input placeholder="username" class="Prompt__cursor auth-input" v-model="variables.username">
-        <input placeholder="pass" class="Prompt__cursor auth-input" v-model="variables.pass" type="password">
-        <input placeholder="ip" class="Prompt__cursor auth-input" v-model="variables.ip">
-        <pre v-if="authError" class="buffer">{{authError}}</pre>
+      <div class="Terminal__body" id="term" v-if="!auth || settingsIsOpened">
+        <input placeholder="username" class="Prompt__cursor auth-input"
+               v-model="variables.username">
+        <input placeholder="pass" class="Prompt__cursor auth-input"
+               v-model="variables.pass" type="password">
+        <input placeholder="ip" class="Prompt__cursor auth-input"
+               v-model="variables.ip">
+        <pre v-if="authError" class="buffer">{{ authError }}</pre>
         <button class="connect-btn" @click="connect">Connect</button>
       </div>
     </div>
@@ -40,6 +50,7 @@
 
 <script>
 import Vue from 'vue';
+
 Vue.directive('focus', {
   inserted: function (el) {
     el.focus()
@@ -85,9 +96,15 @@ export default {
     }
   },
   computed: {
-    username() {return this.variables.username},
-    pass() {return this.variables.pass},
-    ip() {return this.variables.ip},
+    username() {
+      return this.variables.username
+    },
+    pass() {
+      return this.variables.pass
+    },
+    ip() {
+      return this.variables.ip
+    },
   },
   updated() {
     let term = document.getElementById('term');
