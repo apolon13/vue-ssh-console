@@ -2,15 +2,18 @@
   <div class="container-fluid">
     <div class="Terminal">
       <div class="Terminal__Toolbar">
-        <p class="Toolbar__user">Terminal</p>
+        <hsc-menu-style-white>
+          <hsc-menu-bar>
+            <hsc-menu-bar-item label="Options">
+              <hsc-menu-item label="Connect" :sync="true" @click="settingsIsOpened = !settingsIsOpened" />
+            </hsc-menu-bar-item>
+            <hsc-menu-bar-item label="Buffer">
+              <hsc-menu-item label="Clear" :sync="true" @click="commands = [{command: null, buffer: []}]" />
+            </hsc-menu-bar-item>
+          </hsc-menu-bar>
+        </hsc-menu-style-white>
       </div>
       <div class="Terminal__body" id="term" v-if="auth && !settingsIsOpened">
-        <button class="settings-btn"
-                @click="settingsIsOpened = !settingsIsOpened">Settings
-        </button>
-        <button class="settings-btn clear-buf-btn"
-                @click="commands = [{command: null, buffer: []}]">Clear buffer
-        </button>
         <div class="Terminal__Prompt" v-for="(command, index) in commands"
              :key="index">
           <template v-if="index < commands.length && command.command !== null">
@@ -53,6 +56,8 @@
 
 <script>
 import Vue from 'vue';
+import * as VueMenu from '@hscmap/vue-menu'
+Vue.use(VueMenu)
 
 Vue.directive('focus', {
   inserted: function (el) {
@@ -181,6 +186,13 @@ export default {
   margin: 0;
   padding: 0;
 }
+.menubar {
+  padding: 0 !important;
+}
+
+.menu {
+  border-radius: 0 !important;
+}
 </style>
 
 <style scoped>
@@ -247,6 +259,7 @@ body {
   width: 100%;
   height: 100vh;
   box-shadow: 2px 4px 10px rgba(0, 0, 0, .5);
+  overflow: hidden;
 }
 
 .pre-command {
@@ -257,9 +270,8 @@ body {
 .Terminal__Toolbar {
   background: linear-gradient(#504b45 0%, #3c3b37 100%);
   width: 100%;
-  padding: 5px 8px;
+  padding: 0;
   box-sizing: border-box;
-  height: 25px;
   align-items: center;
 }
 
@@ -281,8 +293,20 @@ body {
   padding: 10px;
 }
 
-.Terminal__body::-webkit-scrollbar {
-  display: none;
+::-webkit-scrollbar {
+  width: 20px;
+}
+::-webkit-scrollbar-track {
+  background-color: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background-color: #d6dee1;
+  border-radius: 20px;
+  border: 6px solid transparent;
+  background-clip: content-box;
+}
+::-webkit-scrollbar-thumb:hover {
+  background-color: #a8bbbf;
 }
 
 .Prompt__cursor {

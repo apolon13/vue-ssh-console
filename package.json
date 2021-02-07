@@ -21,6 +21,7 @@
         "build": "encore production --progress"
     },
     "dependencies": {
+        "@hscmap/vue-menu": "^2.10.0",
         "vue-router": "^3.5.1"
     }
 }
