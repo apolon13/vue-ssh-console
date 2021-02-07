@@ -75,7 +75,7 @@ export default {
         username: window.localStorage.getItem('username'),
         pass: window.localStorage.getItem('pass'),
         ip: window.localStorage.getItem('ip'),
-        debug: window.localStorage.getItem('debug')
+        debug: window.localStorage.getItem('debug') === "true"
       },
       auth: false,
       authError: null,
@@ -104,7 +104,7 @@ export default {
       window.localStorage.setItem('ip', this.ip)
     },
     debug() {
-      window.localStorage.setItem('debug', +this.debug)
+      window.localStorage.setItem('debug', this.debug)
     }
   },
   computed: {
